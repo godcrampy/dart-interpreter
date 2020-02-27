@@ -13,6 +13,18 @@ class Scanner {
   static const int SEMICOLON = 0x3B;
   static const int SLASH = 0x2F;
   static const int STAR = 0x2A;
+  static const int BANG = 0x21;
+  static const int EQUAL = 0x3D;
+  static const int LESS = 0x3C;
+  static const int GREATER = 0x3E;
+  static const int NULL = 0x00;
+
+  static const LF = 0xA;
+  static const CR = 0xD;
+  static const SP = 0x20;
+  static const TAB = 0x9;
+
+  static const DOUBLE_QUOTE = 0x22;
 
   final String _source;
   final List<Token> _tokens = List<Token>();
@@ -65,14 +77,105 @@ class Scanner {
       case STAR:
         _addToken(TokenType.STAR);
         break;
+      case BANG:
+        _addToken(_match(EQUAL) ? TokenType.BANG : TokenType.BANG);
+        break;
+      case EQUAL:
+        _addToken(_match(EQUAL) ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+        break;
+      case LESS:
+        _addToken(_match(EQUAL) ? TokenType.LESS_EQUAL : TokenType.LESS);
+        break;
+      case GREATER:
+        _addToken(_match(EQUAL) ? TokenType.GREATER_EQUAL : TokenType.GREATER);
+        break;
+      case SLASH:
+        if (_match(SLASH)) {
+          while (_peek() != NULL && !_isAtEnd()) {
+            _advance();
+          }
+        } else {
+          _addToken(TokenType.SLASH);
+        }
+        break;
+      case CR:
+      case SP:
+      case TAB:
+        break;
+      case LF:
+        ++_line;
+        break;
+      case DOUBLE_QUOTE:
+        _string();
+        break;
       default:
-        error(_line, "Unexpected Charecter");
+        if (_isDigit(c)) {
+          _digit();
+        } else {
+          error(_line, "Unexpected Charecter");
+        }
     }
+  }
+
+  void _digit() {
+    while (_isDigit(_peek())) {
+      _advance();
+    }
+
+    if (_peek() == DOT && _isDigit(_peekNext())) {
+      _advance();
+      while (_isDigit(_peek())) {
+        _advance();
+      }
+    }
+
+    double value = double.parse(_source.substring(_start, _current));
+    _addToken(TokenType.NUMBER, literal: value);
+  }
+
+  void _string() {
+    while (_peek() != DOUBLE_QUOTE && !_isAtEnd()) {
+      if (_peek() == LF) ++_line;
+      _advance();
+    }
+
+    if (_isAtEnd()) {
+      error(_line, "Unterminated String!");
+      return;
+    }
+
+    _advance();
+
+    String value = _source.substring(_start + 1, _current - 1);
+    _addToken(TokenType.STRING, literal: value);
   }
 
   int _advance() {
     ++_current;
     return _source.codeUnitAt(_current - 1);
+  }
+
+  bool _match(int expected) {
+    if (_isAtEnd()) {
+      return false;
+    }
+    if (_source.codeUnitAt(_current) != expected) return false;
+    ++_current;
+    return true;
+  }
+
+  int _peek() {
+    if (_isAtEnd()) return NULL;
+    return _source.codeUnitAt(_current);
+  }
+
+  int _peekNext() {
+    if (_current + 1 >= _source.length) return NULL;
+    return _source.codeUnitAt(_current + 1);
+  }
+
+  bool _isDigit(int c) {
+    return c >= 0x30 && c <= 0x39;
   }
 
   _addToken(TokenType type, {Object literal: null}) {
