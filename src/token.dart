@@ -7,7 +7,7 @@ class Token {
   Token(this.type, this.lexeme, this.literal, this.line);
 
   String toString() {
-    return "$type $lexeme $literal";
+    return "<type: $type, lexeme: $lexeme, literal: $literal, line: $line>";
   }
 }
 
