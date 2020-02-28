@@ -26,6 +26,33 @@ class Scanner {
 
   static const DOUBLE_QUOTE = 0x22;
 
+  static const ZERO = 0x30;
+  static const NINE = 0x39;
+  static const LETTER_A = 0x61;
+  static const LETTER_Z = 0x7A;
+  static const LETTER__CAP_A = 0x41;
+  static const LETTER__CAP_Z = 0x5A;
+  static const UNDERSCORE = 0x5F;
+
+  static const Map<String, TokenType> _keywords = {
+    "and": TokenType.AND,
+    "class": TokenType.CLASS,
+    "else": TokenType.ELSE,
+    "false": TokenType.FALSE,
+    "for": TokenType.FOR,
+    "fun": TokenType.FUN,
+    "if": TokenType.IF,
+    "nil": TokenType.NIL,
+    "or": TokenType.OR,
+    "print": TokenType.PRINT,
+    "return": TokenType.RETURN,
+    "super": TokenType.SUPER,
+    "this": TokenType.THIS,
+    "true": TokenType.TRUE,
+    "var": TokenType.VAR,
+    "while": TokenType.WHILE
+  };
+
   final String _source;
   final List<Token> _tokens = List<Token>();
   int _start = 0;
@@ -111,9 +138,24 @@ class Scanner {
       default:
         if (_isDigit(c)) {
           _digit();
+        } else if (_isAlpha(c)) {
+          _identifier();
         } else {
           error(_line, "Unexpected Charecter");
         }
+    }
+  }
+
+  void _identifier() {
+    while (_isAlpha(_peek())) {
+      _advance();
+    }
+
+    String text = _source.substring(_start, _current);
+    if (_keywords.containsKey(text)) {
+      _addToken(_keywords[text]);
+    } else {
+      _addToken(TokenType.IDENTIFIER);
     }
   }
 
@@ -175,10 +217,16 @@ class Scanner {
   }
 
   bool _isDigit(int c) {
-    return c >= 0x30 && c <= 0x39;
+    return c >= ZERO && c <= NINE;
   }
 
-  _addToken(TokenType type, {Object literal: null}) {
+  bool _isAlpha(int c) {
+    return (c >= LETTER__CAP_A && c <= LETTER__CAP_Z) ||
+        (c >= LETTER_A && c <= LETTER_Z) ||
+        c == UNDERSCORE;
+  }
+
+  void _addToken(TokenType type, {Object literal: null}) {
     String text = _source.substring(_start, _current);
     _tokens.add(Token(type, text, literal, _line));
   }
