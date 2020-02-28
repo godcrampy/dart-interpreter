@@ -1,4 +1,6 @@
 import 'dart:io';
+import './src/scanner.dart';
+import './src/token.dart';
 
 main(List<String> args) {
   if (args.length > 1) {
@@ -20,12 +22,22 @@ void runPrompt() {
   print("Welcome to interpreter v0.1.0");
   while (true) {
     stdout.write("> ");
-    print(stdin.readLineSync());
+    // ! Temporary Code
+    String text = stdin.readLineSync();
+    Scanner s = Scanner(text);
+    List<Token> a = s.scanTokens();
+    a.forEach((e) => print(e));
+    // ! /Temporary Code
   }
 }
 
 void run(String source) {
   print(source);
+  // ! Temporary Code
+  Scanner s = Scanner(source);
+  List<Token> a = s.scanTokens();
+  a.forEach((e) => print(e));
+  // ! /Temporary Code
 }
 
 void error(int line, String message) {
