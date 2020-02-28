@@ -9,3 +9,13 @@ build/
 
 # Directory created by dartdoc
 doc/api/
+
+# vim temporary files
+*~
+*.swp
+*.swo
+
+.vscode/
+
+# used for testing and debugging stuff
+test.dart
