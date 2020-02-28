@@ -118,7 +118,7 @@ class Scanner {
         break;
       case SLASH:
         if (_match(SLASH)) {
-          while (_peek() != NULL && !_isAtEnd()) {
+          while (_peek() != LF && !_isAtEnd()) {
             _advance();
           }
         } else {
