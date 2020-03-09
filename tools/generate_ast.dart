@@ -19,7 +19,7 @@ void defineAst(String outputDir, String baseName, List<String> types) {
   File f = new File(path);
   IOSink sink = f.openWrite();
 
-  sink.writeln('import "../../src/token.dart";');
+  sink.writeln("import '../../src/token.dart';");
   sink.writeln();
   sink.writeln("abstract class $baseName {");
 
