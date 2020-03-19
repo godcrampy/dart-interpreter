@@ -1,11 +1,20 @@
 import './token.dart';
 import './expr.dart';
+import '../main.dart';
 
 class Parser {
   int _current = 0;
   List<Token> tokens;
 
   Parser(this.tokens);
+
+  Expr parse() {
+    try {
+      return _expression();
+    } on ParseError {
+      return null;
+    }
+  }
 
   Expr _expression() {
     return _equality();
@@ -85,9 +94,31 @@ class Parser {
 
     if (_match([TokenType.LEFT_PAREN])) {
       Expr expr = _expression();
-      // TODO: Error Handling
-      // _consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+      _consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
       return new Grouping(expr);
+    }
+
+    throw _error(_peek(), "Expected Expression");
+  }
+
+  void _synchronize() {
+    _advance();
+    while (!_isAtEnd()) {
+      if (_previous().type == TokenType.SEMICOLON) return;
+
+      switch (_peek().type) {
+        case TokenType.CLASS:
+        case TokenType.FUN:
+        case TokenType.VAR:
+        case TokenType.FOR:
+        case TokenType.IF:
+        case TokenType.WHILE:
+        case TokenType.PRINT:
+        case TokenType.RETURN:
+          return;
+        default:
+      }
+      _advance();
     }
   }
 
@@ -122,4 +153,16 @@ class Parser {
   Token _previous() {
     return tokens.elementAt(_current - 1);
   }
+
+  Token _consume(TokenType type, String message) {
+    if (_check(type)) return _advance();
+    throw _error(_peek(), message);
+  }
+
+  ParseError _error(Token token, String message) {
+    error(token, message);
+    return new ParseError();
+  }
 }
+
+class ParseError implements Exception {}

@@ -1,6 +1,11 @@
 import 'dart:io';
 import './src/scanner.dart';
 import './src/token.dart';
+import './src/parser.dart';
+import './src/expr.dart';
+import './src/ast_printer.dart';
+
+bool hadError = false;
 
 main(List<String> args) {
   if (args.length > 1) {
@@ -22,28 +27,44 @@ void runPrompt() {
   print("Welcome to interpreter v0.1.0");
   while (true) {
     stdout.write("> ");
-    // ! Temporary Code
     String text = stdin.readLineSync();
     Scanner s = Scanner(text);
-    List<Token> a = s.scanTokens();
-    a.forEach((e) => print(e));
-    // ! /Temporary Code
+    List<Token> tokens = s.scanTokens();
+    Parser p = new Parser(tokens);
+    Expr expression = p.parse();
+
+    if (hadError) return;
+
+    print(new AstPrinter().print(expression));
   }
 }
 
 void run(String source) {
   print(source);
-  // ! Temporary Code
   Scanner s = Scanner(source);
-  List<Token> a = s.scanTokens();
-  a.forEach((e) => print(e));
-  // ! /Temporary Code
+  List<Token> tokens = s.scanTokens();
+  Parser p = new Parser(tokens);
+  Expr expression = p.parse();
+
+  if (hadError) return;
+
+  print(new AstPrinter().print(expression));
 }
 
-void error(int line, String message) {
-  report(line, "", message);
+void error(dynamic tokenOrLine, String message) {
+  if (tokenOrLine is int) {
+    report(tokenOrLine, "", message);
+  } else {
+    // tokenOrLine is Token
+    if (tokenOrLine.type == TokenType.EOF) {
+      report(tokenOrLine.line, " at end", message);
+    } else {
+      report(tokenOrLine.line, " at '" + tokenOrLine.lexeme + "'", message);
+    }
+  }
 }
 
 void report(int line, String where, String message) {
   print("Error on line $line: $where => $message");
+  hadError = true;
 }
